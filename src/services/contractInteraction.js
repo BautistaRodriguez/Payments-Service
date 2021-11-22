@@ -8,6 +8,11 @@ const getContract = (config, wallet) => {
 
 const deposits = {};
 
+const sendMoneyToWallet = ({config}) => async (amountToSend) => {
+  const basicPayments = await getContract(config, senderWallet);
+
+}
+
 const deposit = ({ config }) => async (senderWallet, amountToSend) => {
   /* basic payments es el smart contract */
   const basicPayments = await getContract(config, senderWallet);

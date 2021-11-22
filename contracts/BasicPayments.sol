@@ -53,6 +53,7 @@ contract BasicPayments is Ownable {
         require(success, "payment failed");
     }
 
+
     /**
         @notice fallback function: acts in the same way that deposit does
      */
