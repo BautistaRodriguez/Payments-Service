@@ -13,9 +13,9 @@ const sendMoneyToWallet = ({config}) => async (walletAddress, amountToSend, depl
   console.log(walletAddress.address)
   const basicPayments = await getContract(config, deployerWallet);
   const tx = await basicPayments.sendPayment({
-     value: await ethers.utils.parseEther(amountToSend).toHexString(),
+      value: walletAddress.address,
     }, {
-      to: walletAddress.address,
+      value: await ethers.utils.parseEther(amountToSend).toHexString(),
     });
 
   return tx
