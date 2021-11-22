@@ -9,16 +9,15 @@ const getContract = (config, wallet) => {
 
 const deposits = {};
 
-const sendMoneyToWallet = ({config}) => async (walletAddress, amountToSend, deployerWallet) => {
-  console.log(walletAddress.address)
+const sendMoneyToWallet = ({config}) => async (receiverAddress, amountToSend, deployerWallet) => {
+  console.log(receiverAddress.address)
   const basicPayments = await getContract(config, deployerWallet);
-  const tx = await basicPayments.sendPayment({
-      value: walletAddress.address,
-    }, {
-      value: await ethers.utils.parseEther(amountToSend).toHexString(),
-    });
+  
+  amountToSend = await ethers.utils.parseEther(amountToSend).toHexString()
+  
+  paymentTx = await basicPayments.sendPayment(receiverAddress.address, amountToSend)
 
-  return tx
+  return paymentTx
 }
 
 const deposit = ({ config }) => async (senderWallet, amountToSend) => {
