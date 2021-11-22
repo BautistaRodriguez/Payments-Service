@@ -44,7 +44,6 @@ contract BasicPayments is Ownable {
         @param receiver Address that will receive the payment
         @param amount Amount to be sent
      */
-     /*Onlyowner hace que esta funcion solo se pueda usar desde el que deployo el contrato */
     function sendPayment(address payable receiver, uint256 amount) external onlyOwner {
         require(address(this).balance >= amount, "not enough balance");
         require(amount > 0, "cannot send 0 weis");
@@ -52,7 +51,6 @@ contract BasicPayments is Ownable {
         (bool success, ) = receiver.call{ value: amount }("");
         require(success, "payment failed");
     }
-
 
     /**
         @notice fallback function: acts in the same way that deposit does
