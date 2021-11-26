@@ -2,7 +2,6 @@ const ethers = require("ethers");
 const getDepositHandler = require("../handlers/getDepositHandler");
 const wallerService = require("./wallets");
 
-
 const getContract = (config, wallet) => {
   return new ethers.Contract(config.contractAddress, config.contractAbi, wallet);
 };
@@ -10,12 +9,19 @@ const getContract = (config, wallet) => {
 const deposits = {};
 
 const sendMoneyToWallet = ({config}) => async (receiverAddress, amountToSend, deployerWallet) => {
-  console.log(receiverAddress.address)
-  const basicPayments = await getContract(config, deployerWallet);
+  console.log("Receiver wallet " + receiverAddress)
+  console.log("Deployer wallet " + deployerWallet.address)
+
+  const basicPayments = await getContract(config, deployerWallet)
   
+  console.log("Signer " + basicPayments.signer.address)
+  console.log("Provider " + basicPayments.provider.address)
+
   amountToSend = await ethers.utils.parseEther(amountToSend).toHexString()
   
-  paymentTx = await basicPayments.sendPayment(receiverAddress.address, amountToSend)
+  var options = { gasLimit: 100000 }
+
+  paymentTx = await basicPayments.sendPayment(receiverAddress, amountToSend, options)
 
   return paymentTx
 }

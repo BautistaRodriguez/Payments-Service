@@ -4,7 +4,6 @@ const accounts = [];
 const getDeployerWallet = ({ config }) => () => {
   const provider = new ethers.providers.InfuraProvider(config.network, config.infuraApiKey);
   const wallet = ethers.Wallet.fromMnemonic(config.deployerMnemonic).connect(provider);
-  console.log("Deployer wallet" + wallet.address);
   return wallet;
 };
 /* Crea una wallet nueva con un proveedor (en este caso es infura), nos conectamos a la blockchain kovan a traves
