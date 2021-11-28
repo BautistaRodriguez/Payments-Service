@@ -9,7 +9,7 @@ ADD deployments/ deployments/
 RUN npm i
 RUN cd -
 
-EXPOSE 5000
+EXPOSE $PORT
 
 # Run entry point
 CMD ["bash", "heroku-entrypoint.sh"]
