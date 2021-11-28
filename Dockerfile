@@ -2,7 +2,7 @@ FROM node:14.16.1
 
 WORKDIR /root
 ADD src/ src/
-COPY package*.json hardhat.config.ts tsconfig.json .env ./
+COPY package*.json hardhat.config.ts tsconfig.json .env heroku-entrypoint.sh ./
 ADD deployments/ deployments/
 
 # Install all dependencies
@@ -12,4 +12,4 @@ RUN cd -
 EXPOSE 5000
 
 # Run entry point
-CMD ["npm", "start"]
+CMD ["bash", "heroku-entrypoint.sh"]
