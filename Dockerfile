@@ -9,7 +9,7 @@ ADD deployments/ deployments/
 RUN npm i
 RUN cd -
 
-EXPOSE $PORT
+EXPOSE 5000
 
 # Run entry point
 CMD ["npm", "start"]
