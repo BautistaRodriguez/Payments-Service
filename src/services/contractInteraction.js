@@ -19,9 +19,7 @@ const sendMoneyToWallet = ({config}) => async (receiverAddress, amountToSend, de
 
   amountToSend = await ethers.utils.parseEther(amountToSend).toHexString()
   
-  var options = { gasLimit: 100000 }
-
-  paymentTx = await basicPayments.sendPayment(receiverAddress, amountToSend, options)
+  paymentTx = await basicPayments.sendPayment(receiverAddress, amountToSend)
 
   return paymentTx
 }
