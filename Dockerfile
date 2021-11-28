@@ -1,19 +1,16 @@
 FROM node:14.16.1
 
-# Set a working directory inside container
-WORKDIR /app
-
-# Copy entry point and application dependencies inside container
-COPY heroku/heroku-entrypoint.sh package*.json ./
+WORKDIR /root
+ADD src/ src/
+COPY package*.json hardhat.config.ts tsconfig.json .env ./
+ADD deployments/ deployments/
 
 # Install all dependencies
-RUN npm install
+RUN npm i
 RUN cd -
 
-EXPOSE 5000
-
-
-COPY src/ ./
+EXPOSE $PORT
 
 # Run entry point
-CMD ["bash", "heroku-entrypoint.sh"]
+CMD ["npm", "start"]
+
