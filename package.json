@@ -8,6 +8,7 @@
     "hardhat": "2.0.6",
     "hardhat-deploy": "0.7.4",
     "hardhat-deploy-ethers": "0.3.0-beta.7",
+    "pg": "^8.7.1",
     "solc": "0.7.4"
   },
   "devDependencies": {
@@ -87,5 +88,17 @@
     "deploy-local": "hardhat deploy --network hardhat",
     "start": "node src/server",
     "release": "standard-version"
-  }
+  },
+  "main": ".commitlintrc.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ubademy-2021/Payments-Service.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ubademy-2021/Payments-Service/issues"
+  },
+  "homepage": "https://github.com/Ubademy-2021/Payments-Service#readme"
 }
