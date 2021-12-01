@@ -1,4 +1,4 @@
-const { log } = require("../config");
+const { log } = require("../logConfig");
 const winston = require("winston");
 
 const logConfiguration = {
