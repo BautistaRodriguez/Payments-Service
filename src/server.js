@@ -1,4 +1,4 @@
-const config = require("./config");
+const config = require("./SCconfig");
 const services = require("./services/services")({ config });
 const routes = require("./routes");
 
