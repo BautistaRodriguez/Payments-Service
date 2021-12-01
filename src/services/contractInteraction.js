@@ -1,4 +1,5 @@
 const ethers = require("ethers");
+const { logInfo } = require("../utils/log");
 
 const getContract = (config, wallet) => {
   return new ethers.Contract(config.contractAddress, config.contractAbi, wallet);
@@ -7,18 +8,15 @@ const getContract = (config, wallet) => {
 const deposits = {};
 
 const sendMoneyToWallet = ({config}) => async (receiverAddress, amountToSend, deployerWallet) => {
-  console.log("Receiver wallet " + receiverAddress)
-  console.log("Deployer wallet " + deployerWallet.address)
-
+  logInfo("Sending money to wallet with address: " + receiverAddress + " from deployer waller: " + deployerWallet.address)
   const basicPayments = await getContract(config, deployerWallet)
-  
-  console.log("Signer " + basicPayments.signer.address)
-  console.log("Provider " + basicPayments.provider.address)
+
+  logInfo("Signer is " + basicPayments.signer.address)
 
   amountToSend = await ethers.utils.parseEther(amountToSend).toHexString()
-  
   paymentTx = await basicPayments.sendPayment(receiverAddress, amountToSend)
 
+  logInfo("Transaction succeed! Money sent to wallet " + receiverAddress + "\nTx hash: " + paymentTx['hash'])
   return paymentTx
 }
 
