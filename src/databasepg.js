@@ -1,6 +1,7 @@
 const {Client} = require('pg')
+let client;
 
-const client = new Client ({
+client = new Client ({
   host: "ec2-18-213-133-45.compute-1.amazonaws.com",
   user: "levdkwfshldbzd",
   port: 5432,
@@ -11,17 +12,10 @@ const client = new Client ({
 
 client.connect();
 
-client.query(`Select * from wallet_info`, (err,res)=>{
-  if(!err) {
-    console.log(res.rows);
-  }else{
-    console.log(err.message);
-  }
-  client.end;
-})
+exports.client = client;
 
 
-
+/*
 //INSERT INTO WALLET_INFO(user_id, wallet_address, wallet_private_key) VALUES (554,'02323ABF23FBA1','02323ABF23FBA2');
 client.query(`Insert into WALLET_INFO(user_id, wallet_address, wallet_private_key) VALUES (4,'ABC1','ABC2');`, (err,res)=>{
   if(!err) {
@@ -31,3 +25,4 @@ client.query(`Insert into WALLET_INFO(user_id, wallet_address, wallet_private_ke
   }
   client.end;
 })
+*/
