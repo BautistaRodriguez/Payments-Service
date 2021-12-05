@@ -1,4 +1,4 @@
-const { logInfo } = require("../utils/log");
+const { logInfo, logError } = require("../utils/log");
 
 function schema() {
   return {
@@ -20,10 +20,19 @@ function schema() {
 function handler({ contractInteraction, walletService, suscriptionService }) {
   return function (req, reply) {
     Promise.all([suscriptionService.getSuscriptionPrice(req.body.suscriptionId), walletService.getWallet(req.body.senderId)])
-      .then(([price, senderWallet]) => {
+      .then(async ([price, senderWallet]) => {
         console.log("Price for suscription is: " + price)
-        const tx = contractInteraction.deposit(senderWallet, price.toString())
-        reply.code(201).send("Transaction success!")
+
+        try {
+          const tx = await contractInteraction.deposit(senderWallet, (price+0.0001).toString())
+          logInfo("Transaction succeed!")
+
+          reply.code(201).send(tx)
+        } catch (err) {
+          logError("Transaction failed!")
+          reply.code(400).send(err)
+        }
+
       })
       .catch(err => reply.code(400).send(err))
     }
