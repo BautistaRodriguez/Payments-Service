@@ -1,3 +1,5 @@
+const { logInfo } = require("../utils/log");
+
 function schema() {
   return {
     params: {
@@ -14,8 +16,11 @@ function schema() {
 
 function handler({ walletService }) {
   return async function (req, reply) {
-    const body = await walletService.getWalletData(req.params.id);
-    reply.code(200).send(body);
+    logInfo("Getting wallet for user " + req.params.id)
+
+    walletService.getWallet(req.params.id, function(wallet){
+      reply.code(200).send(wallet);
+    });
   };
 }
 
