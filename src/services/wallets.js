@@ -45,9 +45,9 @@ const createWallet = (userId) => async (userId) => {
   return result;
 };
 
-const getWallet = () => async (userId, callback) => {
-  logInfo("Getting wallet for user id " + userId)
 
+
+const getWalletForUser = userId => new Promise((resolve, reject) => {
   var client = databaseConfig.client;
 
   const queryParams ={
@@ -56,13 +56,27 @@ const getWallet = () => async (userId, callback) => {
     values: [userId],
   }
 
-  client.query(queryParams, (err,res) => {
+  client.query(queryParams, (err, res) => {
     if (!err) {
       logInfo("Wallet address " + res.rows[0]['wallet_address'] + " for user id " + userId)
-      callback(res.rows[0]);
+      return resolve(res)
     } else {
-      logError(err.message);
+      return reject(err)
     }
+  })
+
+  client.end
+})
+
+const getWallet = () => (userId) => {
+  logInfo("Getting wallet for user id " + userId)
+
+  const provider = new ethers.providers.InfuraProvider("kovan", process.env.INFURA_API_KEY);
+
+  return new Promise ((resolve, reject) => {
+    getWalletForUser(userId)
+      .then(queryResponse => resolve(new ethers.Wallet(queryResponse.rows[0]['wallet_private_key'], provider)))
+      .catch(err => reject(logError(err.message)))
   })
 };
 

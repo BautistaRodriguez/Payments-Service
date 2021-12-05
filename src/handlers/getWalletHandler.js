@@ -15,13 +15,11 @@ function schema() {
 }
 
 function handler({ walletService }) {
-  return async function (req, reply) {
-    logInfo("Getting wallet for user " + req.params.id)
-
-    walletService.getWallet(req.params.id, function(wallet){
-      reply.code(200).send(wallet);
-    });
-  };
+  return function (req, reply) {
+    walletService.getWallet(req.params.id)
+      .then(wallet => reply.code(200).send(wallet))
+      .catch(err => reply.code(400).send(err))
+  }
 }
 
 module.exports = { handler, schema };
