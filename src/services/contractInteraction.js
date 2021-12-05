@@ -27,7 +27,7 @@ const deposit = ({ config }) => async (senderWallet, amountToSend) => {
     value: await ethers.utils.parseEther(amountToSend).toHexString(),
   });
 
-/* No se queda esperando a que se mine, sucede asincronicamente */
+  /* No se queda esperando a que se mine, sucede asincronicamente */
   tx.wait(1).then(
     receipt => {
       /* Aca chequeamos si se hizo el deposito bien */
