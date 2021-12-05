@@ -30,7 +30,7 @@ function handler({ contractInteraction, walletService, suscriptionService }) {
           reply.code(201).send(tx)
         } catch (err) {
           logError("Transaction failed!")
-          reply.code(400).send(err)
+          reply.code(400).send("An error ocurred during payment. Please, check if you hace neccessary founds.")
         }
 
       })
