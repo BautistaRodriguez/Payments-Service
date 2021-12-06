@@ -8,12 +8,12 @@ function schema() {
         senderId: {
           type: "integer",
         },
-        amountInEthers: {
-          type: "string",
+        suscriptionId: {
+          type: "integer",
         },
       },
     },
-    required: ["senderId", "amountInEthers"],
+    required: ["suscriptionId", "senderId"],
   };
 }
 
@@ -21,18 +21,22 @@ function handler({ contractInteraction, walletService, suscriptionService }) {
   return function (req, reply) {
     Promise.all([suscriptionService.getSuscriptionPrice(req.body.suscriptionId), walletService.getWallet(req.body.senderId)])
       .then(async ([price, senderWallet]) => {
-        console.log("Price for suscription is: " + price)
+        var tx
 
         try {
-          const tx = await contractInteraction.deposit(senderWallet, (price+0.0001).toString())
-          logInfo("Transaction succeed!")
+          // Update table
+          await suscriptionService.updateUserSuscription(req.body.suscriptionId, req.body.senderId)
 
-          reply.code(201).send(tx)
+          // Make new deposit to contract
+          tx = await contractInteraction.deposit(senderWallet, (price+0.0001).toString())
         } catch (err) {
           logError("Transaction failed!")
-          reply.code(400).send("An error ocurred during payment. Please, check if you hace neccessary founds.")
+          reply.code(400).send(err.message)
+          return
         }
 
+        logInfo("Transaction succeed!")
+        reply.code(201).send(tx)
       })
       .catch(err => reply.code(400).send(err))
     }
