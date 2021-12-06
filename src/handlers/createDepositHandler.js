@@ -19,20 +19,33 @@ function schema() {
 
 function handler({ contractInteraction, walletService, suscriptionService }) {
   return function (req, reply) {
+    if (req.body.suscriptionId == 1) {
+      logInfo("Suscription is free!")
+      reply.code(201).send(tx)
+      return
+    }
+
     Promise.all([suscriptionService.getSuscriptionPrice(req.body.suscriptionId), walletService.getWallet(req.body.senderId)])
       .then(async ([price, senderWallet]) => {
         var tx
 
         try {
           // Update table
-          await suscriptionService.updateUserSuscription(req.body.suscriptionId, req.body.senderId)
-
-          // Make new deposit to contract
-          tx = await contractInteraction.deposit(senderWallet, (price+0.0001).toString())
+          suscriptionService.updateUserSuscription(req.body.suscriptionId, req.body.senderId, true)
+            .then(
+              // Make new deposit to contract
+              tx = await contractInteraction.deposit(senderWallet, price.toString())
+            )
+            .catch(err => {
+              logError("Transaction failed with error " + err.message + " for user " + req.body.senderId)
+              reply.code(400).send(err.message)
+            })
         } catch (err) {
-          logError("Transaction failed!")
-          reply.code(400).send(err.message)
-          return
+          logError("Transaction failed with error " + err.message + ". Rollbacking table for user " + req.body.senderId)
+
+          suscriptionService.updateUserSuscription(req.body.suscriptionId, req.body.senderId, false) // is_paid false
+            .then(reply.code(400).send(err.message))
+            .catch(err => logError(err.message))
         }
 
         logInfo("Transaction succeed!")

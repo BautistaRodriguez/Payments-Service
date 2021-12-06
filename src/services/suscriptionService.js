@@ -13,92 +13,98 @@ const getSuscriptionPrice = ({config}) => (suscriptionId) => {
   })
 }
 
-const updateUserSuscription = ({config}) => async (suscriptionId, userId) => {
-  logInfo("Updating table user_suscriptions for user " + userId)
+const updateUserSuscription = ({config}) => (suscriptionId, userId, is_paid) => {
+  return new Promise ((resolve, reject) => {
+    logInfo("Updating table user_suscriptions for user " + userId)
 
-  var client = databaseConfig.client;
+    var client = databaseConfig.client;
 
-  const selectQueryParams ={
-    name: 'fetch suscriptions',
-    text:  'SELECT * FROM user_suscriptions w WHERE w.User_id= $1',
-    values: [userId],
-  }
-
-  await client.query(selectQueryParams, async (err, res)=>{
-    if(!err) {
-      if (res.rows.length > 0)
-        logInfo("User has suscription id: " + res.rows[0]['suscription_id'])
-
-        if (res.rows[0]['suscription_id'] == suscriptionId) {
-          logInfo("User already has suscription. Updating is_paid")
-          updateIsPaidColumn(userId, true)
-        } else {
-          logInfo("User does not have suscription. Creating record")
-          createUserSuscriptionRecord(userId, suscriptionId)
-        }
-    } else {
-      logError(err.message);
-      throw Error(err.message)
+    const selectQueryParams ={
+      name: 'fetch suscriptions',
+      text:  'SELECT * FROM user_suscriptions w WHERE w.User_id= $1',
+      values: [userId],
     }
-  })
 
-  client.end
+    client.query(selectQueryParams, async (err, res)=>{
+      if(!err) {
+        if (res.rows.length > 0) { // User already has a suscription
+          logInfo("User has suscription id: " + res.rows[0]['suscription_id'])
+
+          updateUserSuscriptionRecord(userId, is_paid, suscriptionId)
+            .then(resolve())
+            .catch(err => reject(err))
+        } else { // User does not have any records yet
+          logInfo("User does not have suscription. Creating record")
+
+          createUserSuscriptionRecord(userId, suscriptionId)
+            .then(resolve())
+            .catch(err => reject(err))
+        }
+      } else {
+        reject(err)
+      }
+    })
+
+    client.end
+  })
 }
 
 const createUserSuscriptionRecord = (userId, suscriptionId) => {
-  logInfo("Creating suscription record for user user " + userId + " with suscription " + suscriptionId)
+  return new Promise ((resolve, reject) => {
+    logInfo("Creating suscription record for user " + userId + " with suscription " + suscriptionId)
 
-  var client = databaseConfig.client;
+    var client = databaseConfig.client;
 
-  const queryParams ={
-    name: 'create record for user and suscription',
-    text: `INSERT INTO user_suscriptions(expired_date, is_paid, suscription_id, user_id) VALUES (to_timestamp(${Date.now() + 30*86400000} / 1000.0), $1, $2, $3)`,
-    values: [true, suscriptionId, userId]
-  }
-
-  client.query(queryParams, (err, res)=>{
-    if(!err) {
-      logInfo("Created new record for user " + userId + " and suscription " + suscriptionId)
-    } else {
-      logError(err.message);
-      throw Error(err.message)
+    const queryParams ={
+      name: 'create record for user and suscription',
+      text: `INSERT INTO user_suscriptions(expired_date, is_paid, suscription_id, user_id) VALUES (to_timestamp(${Date.now() + 30*86400000} / 1000.0), $1, $2, $3)`,
+      values: [true, suscriptionId, userId]
     }
-  })
 
-  client.end
+    client.query(queryParams, (err, res)=>{
+      if(!err) {
+        resolve()
+      } else {
+        reject(err)
+      }
+    })
+
+    client.end
+  })
 }
 
 
-const updateIsPaidColumn = (userId, value) => {
-  logInfo("Updating is_paid for user " + userId + " with value " + value)
+const updateUserSuscriptionRecord = (userId, value, suscriptionId) => {
+  return new Promise ((resolve, reject) => {
+    logInfo("Updating record for user " + userId + " with value " + value + " and suscription " + suscriptionId)
 
-  var client = databaseConfig.client;
-  var text, values
+    var client = databaseConfig.client;
+    var text, values
 
-  if (value) {
-    text = `UPDATE user_suscriptions SET is_paid = true, expired_date = (to_timestamp(${Date.now() + 30*86400000} / 1000.0)) WHERE User_id= $1`
-    values = [userId]
-  } else {
-    text = 'UPDATE user_suscriptions SET is_paid = false WHERE User_id = $1'
-    values = [userId]
-  }
-
-  const queryParams ={
-    name: 'update is_paid addresses',
-    text:  text,
-    values: values
-  }
-
-  client.query(queryParams, (err, res)=>{
-    if(!err) {
-      logInfo("Updated user " + userId)
+    if (value) {
+      text = `UPDATE user_suscriptions SET is_paid = true, suscription_id = $1, expired_date = (to_timestamp(${Date.now() + 30*86400000} / 1000.0)) WHERE User_id= $2`
+      values = [suscriptionId, userId]
     } else {
-      logError(err.message);
-      throw Error(err.message)
+      text = `UPDATE user_suscriptions SET is_paid = false, expired_date = (to_timestamp(${Date.now()}) WHERE User_id = $1`
+      values = [userId]
     }
-  })
 
-  client.end
+    const queryParams ={
+      name: 'update record in user_suscription',
+      text:  text,
+      values: values
+    }
+
+    client.query(queryParams, (err, res)=>{
+      if(!err) {
+        resolve()
+      } else {
+        reject(err);
+      }
+    })
+
+    client.end
+  })
 }
 
 module.exports = dependencies => ({
