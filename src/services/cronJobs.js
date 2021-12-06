@@ -1,21 +1,21 @@
 const cron = require('node-cron');
 const config = require("../SCconfig");
 const { logInfo, logError } = require('../utils/log');
-const { getCollaborators } = require('./requestsService');
+const { getCourses, getCourseInfo, getCourseInscriptions } = require('./requestsService');
 const databaseConfig = require("../databasepg");
 const services = require("./services")({ config });
-const parse = require('postgres-date')
 const moment = require('moment')
+const { category_one_payment_per_student, category_two_payment_per_student, category_three_payment_per_student, category_four_payment_per_student } = require('./../config')
 
 exports.runCronJobs = () => {
-  //sendProfessorsPayemnts()
-  checkStudentPayments()
+  sendProfessorsPayemnts()
+  //checkStudentPayments()
 }
 
 const checkStudentPayments = () => {
   logInfo("Job 'Student's suscription payments' started succesfully with server")
 
-  cron.schedule('0 0 0 * * *', async function() {
+  cron.schedule(process.env.CRON_STUDENTS_JOB, async function() {
     logInfo("Running job to check suscription's expired date")
     var client = databaseConfig.client;
 
@@ -94,44 +94,48 @@ const sendProfessorsPayemnts = () => {
   var client = databaseConfig.client;
 
   // Get wallet service
-  deployerWaller = services.walletService.getDeployerWallet(config)
+  deployerWallet = services.walletService.getDeployerWallet(config)
 
-  cron.schedule('* * * * *', function() {
-    logInfo("Running job to send payments to proffesor")
+  cron.schedule(process.env.CRON_PROFESSORS_JOB, function() {
+    logInfo("Running job to send payments to professor")
 
-    getCollaborators(function(collaborators) {
-      logInfo("Got " + collaborators.data.length + " collaborators")
+    getCourses(function(courses) {
+      logInfo("Got " + courses.data.length + " courses")
 
-      // TODO Get SC founds
-      scTotalFounds = 0.0001
+      for (const course of courses.data){
+        getCourseInfo(course['id'], function() {
+          const ownerId = course['owner']['id']
+          const courseSuscription = 1 || course['suscriptions'][0]['id']
 
-      paymentForEach = scTotalFounds / collaborators.data.length
-      logInfo("Each collaborator will receive " + paymentForEach + " ether(s)")
+          services.walletService.getWallet(ownerId)
+            .then(wallet => {
+              logInfo("Wallet address for user " + ownerId + " is " + wallet.address)
+              logInfo("Got information for course " + course['id'] + ". Owner is user with id " + ownerId + " . Course in suscription " + courseSuscription)
 
-      collaborators = collaborators.data
+              getCourseInscriptions(course['id'], async function (studentsInCourse) {
+                logInfo("Course " + course['id'] + " has " + studentsInCourse.data.length + " students")
+                var payment = 0
 
-      // Corre en O(nxm) . Se puede hacer o(n) haciendo un SELECT... WHERE w.User_id IN [users id de profs]
-      // n: todos los usuarios en la tabla, m: todos los colaboradores
-      for (const collaborator of collaborators){
-        const queryParams ={
-          name: 'fetch addresses',
-          text:  'SELECT * FROM wallet_info w WHERE w.User_id= $1',
-          values: [collaborator.id],
-        }
+                if (studentsInCourse.data.length != 0) {
+                  if (courseSuscription == 1){
+                    payment = (studentsInCourse.data.length * category_one_payment_per_student)
+                  } else if (courseSuscription == 2) {
+                    payment = (studentsInCourse.data.length * category_two_payment_per_student)
+                  } else if (courseSuscription == 3) {
+                    payment = (studentsInCourse.data.length * category_three_payment_per_student)
+                  } else {
+                    payment = (studentsInCourse.data.length * category_four_payment_per_student)
+                  }
 
-        client.query(queryParams, (err,res)=>{
-          if(!err) {
-            logInfo("Sending " + paymentForEach + " to user id: " + collaborator.id)
-
-            //Al descomentar va a mandar keth
-            //services.contractInteraction.sendMoneyToWallet(res.rows[0]['wallet_address'], paymentForEach.toString(), deployerWaller)
-          } else {
-            console.log(err.message);
-          }
+                  logInfo("Sending " + payment + " ETH to user " + ownerId)
+                  await services.contractInteraction.sendMoneyToWallet(wallet.address, payment.toString(), deployerWallet)
+                  await new Promise(resolve => setTimeout(resolve, 5000));
+                }
+              })
+            })
+            .catch(err => logError(err))
         })
       }
-
-      client.end;
     })
-  });
+  })
 }

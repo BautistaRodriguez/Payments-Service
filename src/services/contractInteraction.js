@@ -16,7 +16,8 @@ const sendMoneyToWallet = ({config}) => async (receiverAddress, amountToSend, de
   amountToSend = await ethers.utils.parseEther(amountToSend).toHexString()
   paymentTx = await basicPayments.sendPayment(receiverAddress, amountToSend)
 
-  logInfo("Transaction succeed! Money sent to wallet " + receiverAddress + "\nTx hash: " + paymentTx['hash'])
+  logInfo("Transaction succeed! Money sent to wallet " + receiverAddress + ". Tx hash: " + paymentTx['hash'])
+
   return paymentTx
 }
 
