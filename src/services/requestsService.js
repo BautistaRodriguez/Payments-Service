@@ -37,10 +37,10 @@ exports.getCourses = (callback) => {
 
   axios.get(url)
     .then((res) => {
-        callback(res)
+      callback(res)
     })
     .catch((error) => {
-        logError(`Error while making GET request to ${url}. Got ${error}`);
+      reject(logError(`Error while making GET request to ${url}. Got ${error}`));
     });
 }
 

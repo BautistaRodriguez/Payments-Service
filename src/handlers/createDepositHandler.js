@@ -21,7 +21,7 @@ function handler({ contractInteraction, walletService, suscriptionService }) {
   return function (req, reply) {
     if (req.body.suscriptionId == 1) {
       logInfo("Suscription is free!")
-      reply.code(201).send(tx)
+      reply.code(201).send("Suscription if Free")
       return
     }
 
