@@ -8,16 +8,19 @@ const getContract = (config, wallet) => {
 const deposits = {};
 
 const sendMoneyToWallet = ({config}) => async (receiverAddress, amountToSend, deployerWallet) => {
-  logInfo("Sending money to wallet with address: " + receiverAddress + " from deployer waller: " + deployerWallet.address)
-  const basicPayments = await getContract(config, deployerWallet)
+  return new Promise (async (resolve, reject) => {
+    logInfo("Sending money to wallet with address: " + receiverAddress + " from deployer wallet: " + deployerWallet.address)
+    const basicPayments = await getContract(config, deployerWallet)
 
-  logInfo("Signer is " + basicPayments.signer.address)
+    logInfo("Signer is " + basicPayments.signer.address)
 
-  amountToSend = await ethers.utils.parseEther(amountToSend).toHexString()
-  paymentTx = await basicPayments.sendPayment(receiverAddress, amountToSend)
+    amountToSend = await ethers.utils.parseEther(amountToSend).toHexString()
+    paymentTx = await basicPayments.sendPayment(receiverAddress, amountToSend)
 
-  logInfo("Transaction succeed! Money sent to wallet " + receiverAddress + "\nTx hash: " + paymentTx['hash'])
-  return paymentTx
+    logInfo("Transaction succeed! Money sent to wallet " + receiverAddress + ". Tx hash: " + paymentTx['hash'])
+
+    resolve(paymentTx)
+  })
 }
 
 const deposit = ({ config }) => async (senderWallet, amountToSend) => {

@@ -10,12 +10,9 @@ exports.getCollaborators = (callback) => {
   axios.get(url)
   .then((res) => {
       callback(res)
-  }).catch((error) => {
-      if (error.response) {
-          logError(`Error while making GET request to ${url} got status code: ${error.response.status}`);
-      } else {
-          response.status(400).send(`Error while making GET request to ${url}`);
-      }
+  })
+  .catch((error) => {
+      logError(`Error while making GET request to ${url}. Got ${error}`);
   });
 }
 
@@ -25,13 +22,52 @@ exports.getSuscription = (suscriptionId, callback) => {
   url = `${base_course_service_url}/api/suscriptions/` + suscriptionId
 
   axios.get(url)
-  .then((res) => {
+    .then((res) => {
+        callback(res)
+    })
+    .catch((error) => {
+        logError(`Error while making GET request to ${url}. Got ${error}`);
+    });
+}
+
+exports.getCourses = (callback) => {
+  logInfo("Getting all courses")
+
+  url = `${base_course_service_url}/api/courses`
+
+  axios.get(url)
+    .then((res) => {
       callback(res)
-  }).catch((error) => {
-      if (error.response) {
-          logError(`Error while making GET request to ${url} got status code: ${error.response.status}`);
-      } else {
-          response.status(400).send(`Error while making GET request to ${url}`);
-      }
-  });
+    })
+    .catch((error) => {
+      reject(logError(`Error while making GET request to ${url}. Got ${error}`));
+    });
+}
+
+exports.getCourseInfo = (courseId, callback) => {
+  logInfo("Getting course info for course " + courseId)
+
+  url = `${base_course_service_url}/api/courses?course_id=` + courseId
+
+  axios.get(url)
+    .then((res) => {
+        callback(res)
+    })
+    .catch((error) => {
+      logError(`Error while making GET request to ${url}. Got ${error}`);
+    });
+}
+
+exports.getCourseInscriptions = (courseId, callback) => {
+  logInfo("Getting course inscriptions for course " + courseId)
+
+  url = `${base_course_service_url}/api/courses/students/` + courseId
+
+  axios.get(url)
+    .then((res) => {
+        callback(res)
+    })
+    .catch((error) => {
+      logError(`Error while making GET request to ${url}. Got ${error}`);
+    });
 }
