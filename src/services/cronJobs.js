@@ -9,7 +9,7 @@ const { category_one_payment_per_student, category_two_payment_per_student, cate
 
 exports.runCronJobs = () => {
   sendProfessorsPayments()
-  //checkStudentPayments()
+  checkStudentPayments()
 }
 
 const checkStudentPayments = () => {
