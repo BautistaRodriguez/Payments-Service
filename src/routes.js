@@ -4,6 +4,7 @@ const createWallet = require("./handlers/createWalletHandler");
 const createDeposit = require("./handlers/createDepositHandler");
 const getDeposit = require("./handlers/getDepositHandler");
 const sendPayment = require("./handlers/sendPaymentHandler");
+const healthHandler = require("./handlers/healthHandler");
 
 function getWalletDataRoute({ services, config }) {
   return {
@@ -59,4 +60,12 @@ function sendPaymentRoute({services, config}){
   };
 }
 
-module.exports = [getWalletDataRoute, getWalletsDataRoute, createWalletRoute, createDepositRoute, getDepositRoute, sendPaymentRoute];
+function health({services, config}){
+  return {
+    method: "GET",
+    url: "/ping",
+    handler: healthHandler.handler()
+  };
+}
+
+module.exports = [getWalletDataRoute, getWalletsDataRoute, createWalletRoute, createDepositRoute, getDepositRoute, sendPaymentRoute, health];
