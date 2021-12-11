@@ -6,7 +6,6 @@
 Correr el listener:
 
 npm run start 
-
 Crear una wallet:
 
 http POST http://localhost:3000/wallet
