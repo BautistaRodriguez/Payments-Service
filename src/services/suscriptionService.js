@@ -107,7 +107,35 @@ const updateUserSuscriptionRecord = (userId, value, suscriptionId) => {
   })
 }
 
+const getSuscriptionStatus = ({config}) => (userId) => {
+  return new Promise ((resolve, reject) => {
+    var client = databaseConfig.client
+
+    const queryParams ={
+      name: 'get suscription status for user',
+      text:  'SELECT is_paid FROM user_suscriptions where User_id = $1',
+      values: [userId]
+    }
+
+    client.query(queryParams, (err, res)=>{
+      if(!err) {
+        if (res.rows.length > 0) {
+          logInfo("User suscription is paid? " + res.rows[0]['is_paid'])
+          resolve(res.rows[0]['is_paid'])
+        } else {
+          reject("User not found")
+        }
+      } else {
+        reject(err);
+      }
+    })
+
+    client.end
+  })
+}
+
 module.exports = dependencies => ({
   getSuscriptionPrice: getSuscriptionPrice(dependencies),
-  updateUserSuscription: updateUserSuscription(dependencies)
+  updateUserSuscription: updateUserSuscription(dependencies),
+  getSuscriptionStatus: getSuscriptionStatus(dependencies)
 });

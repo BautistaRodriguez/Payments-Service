@@ -5,6 +5,7 @@ const createDeposit = require("./handlers/createDepositHandler");
 const getDeposit = require("./handlers/getDepositHandler");
 const sendPayment = require("./handlers/sendPaymentHandler");
 const healthHandler = require("./handlers/healthHandler");
+const getSuscriptionStatus = require("./handlers/getSuscriptionStatusHandler");
 
 function getWalletDataRoute({ services, config }) {
   return {
@@ -65,6 +66,14 @@ function health({services, config}){
     method: "GET",
     url: "/ping",
     handler: healthHandler.handler()
+  };
+}
+
+function health({services, config}){
+  return {
+    method: "GET",
+    url: "/suscriptionStatus/:userId",
+    handler: getSuscriptionStatus.handler({ config, ...services })
   };
 }
 
