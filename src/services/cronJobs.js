@@ -105,9 +105,6 @@ const sendProfessorsPayments = () => {
 
       buildProfessorsObjects(function(result) {
         professors = result
-        professors["1"] = { "wallet_address": "0x138B90a6675ae7eEc5d8E56208A872659d9854D8", 1: 0, 2: 0, 3: 0, 4: 0, "total_payment": 0 }
-        professors["2"] = { "wallet_address": "0x138B90a6675ae7eEc5d8E56208A872659d9854D8", 1: 0, 2: 0, 3: 0, 4: 0, "total_payment": 0 }
-        professors["7"] = { "wallet_address": "0x138B90a6675ae7eEc5d8E56208A872659d9854D8", 1: 0, 2: 0, 3: 0, 4: 0, "total_payment": 0 }
         console.log(professors)
 
         resolve()
