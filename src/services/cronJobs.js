@@ -8,8 +8,8 @@ const moment = require('moment')
 const { category_one_payment_per_student, category_two_payment_per_student, category_three_payment_per_student, category_four_payment_per_student } = require('./../config')
 
 exports.runCronJobs = () => {
-  sendProfessorsPayemnts()
-  //checkStudentPayments()
+  sendProfessorsPayments()
+  checkStudentPayments()
 }
 
 const checkStudentPayments = () => {
@@ -89,9 +89,8 @@ const makeAutomaticPayment = (userId, suscriptionId) => {
   })
 }
 
-const sendProfessorsPayemnts = () => {
+const sendProfessorsPayments = () => {
   logInfo("Job 'Professors Payments' started succesfully with server")
-  var client = databaseConfig.client;
 
   // Get wallet service
   deployerWallet = services.walletService.getDeployerWallet(config)
@@ -102,15 +101,16 @@ const sendProfessorsPayemnts = () => {
     var professors = {}
 
     new Promise(function(resolve, reject) {
-      logInfo("PASO NUMERO 1")
+      logInfo("JOB Professors Payments - STEP #1")
 
       buildProfessorsObjects(function(result) {
         professors = result
         console.log(professors)
+
         resolve()
       })
     }).then(function() {
-      logInfo("PASO NUMERO 2")
+      logInfo("JOB Professors Payments - STEP #2")
 
       return new Promise(function(resolve, reject) {
         getCourses(function(courses) {
@@ -119,7 +119,7 @@ const sendProfessorsPayemnts = () => {
         })
       })
     }).then(function(courses) {
-      logInfo("PASO NUMERO 3")
+      logInfo("JOB Professors Payments - STEP #3")
 
       logInfo("Analyzing courses")
 
@@ -129,61 +129,28 @@ const sendProfessorsPayemnts = () => {
         })
       })
     }).then(function(result) {
-      logInfo("PASO NUMERO 4")
-
-      console.log("Professors")
-      console.log(professors)
+      logInfo("JOB Professors Payments - STEP #4")
       console.log(result)
-    });
+
+      return new Promise((resolve, reject) => {
+        calculateAccumulateForProfessors(professors, function(res){
+          resolve(res)
+        })
+      })
+    }).then(function(result) {
+      logInfo("JOB Professors Payments - STEP #5")
+      console.log(result)
+
+      return new Promise((resolve, reject) => {
+        sendPayments(professors, deployerWallet, function(res){
+          resolve(res)
+        })
+      })
+    }).then(function(result) {
+      console.log(result)
+    }).catch(err => logError(err))
   })
 }
-
-
-    // }).then(function(result) {
-
-    //   console.log(result); // 4
-
-    // });
-
-    // getCourses(function(courses) {
-    //   logInfo("Got " + courses.data.length + " courses")
-
-    //   for (const course of courses.data){
-    //     getCourseInfo(course['id'], function() {
-    //       const ownerId = course['owner']['id']
-    //       const courseSuscription = 1 || course['suscriptions'][0]['id']
-
-    //       services.walletService.getWallet(ownerId)
-    //         .then(wallet => {
-    //           logInfo("Wallet address for user " + ownerId + " is " + wallet.address)
-    //           logInfo("Got information for course " + course['id'] + ". Owner is user with id " + ownerId + " . Course in suscription " + courseSuscription)
-
-    //           getCourseInscriptions(course['id'], async function (studentsInCourse) {
-    //             logInfo("Course " + course['id'] + " has " + studentsInCourse.data.length + " students")
-    //             var payment = 0
-
-    //             if (studentsInCourse.data.length != 0) {
-    //               if (courseSuscription == 1){
-    //                 payment = (studentsInCourse.data.length * category_one_payment_per_student)
-    //               } else if (courseSuscription == 2) {
-    //                 payment = (studentsInCourse.data.length * category_two_payment_per_student)
-    //               } else if (courseSuscription == 3) {
-    //                 payment = (studentsInCourse.data.length * category_three_payment_per_student)
-    //               } else {
-    //                 payment = (studentsInCourse.data.length * category_four_payment_per_student)
-    //               }
-
-    //               logInfo("Sending " + payment + " ETH to user " + ownerId)
-    //               //services.contractInteraction.sendMoneyToWallet(wallet.address, payment.toString(), deployerWallet)
-    //             }
-    //           })
-    //         })
-    //         .then(console.log("Ended job"))
-    //         .catch(err => logError(err))
-    //     })
-    //   }
-    // })
-
 
 const getCoursesInfoToMakePayments = async (courses, professors, callback) => {
   var promiseArray = [];
@@ -195,10 +162,11 @@ const getCoursesInfoToMakePayments = async (courses, professors, callback) => {
 
           const courseSuscription = 1 || course['suscriptions'][0]['id']
 
-          console.log("Amount inscriptions " + inscriptionsAmount + " in suscription " + courseSuscription + " for professor " + course['owner']['id'])
+          console.log("Amount inscriptions: " + inscriptionsAmount + " in suscription: " + courseSuscription + " for professor: " + course['owner']['id'])
 
-          // if ((course['owner']['id'] != 7 ) && (course['owner']['id'] != 1) && (course['owner']['id'] != 2))
-          //   professors[course['owner']['id']][courseSuscription.toString()] += inscriptionsAmount
+          if(inscriptionsAmount > 0){
+            professors[course['owner']['id']][courseSuscription] = professors[course['owner']['id']][courseSuscription] + inscriptionsAmount
+          }
 
           resolve()
         })
@@ -208,6 +176,7 @@ const getCoursesInfoToMakePayments = async (courses, professors, callback) => {
   const pro = await Promise.all(promiseArray)
   callback("OK getting courses info to make payments")
 }
+
 
 const getCourseOwnerAndInscriptions = (course, callback) => {
   const courseId = course['id']
@@ -222,6 +191,7 @@ const getCourseOwnerAndInscriptions = (course, callback) => {
     callback(studentsInCourse.data.length)
   })
 }
+
 
 const buildProfessorsObjects = (callback) => {
   var professors = {}
@@ -240,7 +210,9 @@ const buildProfessorsObjects = (callback) => {
         services.walletService.getWallet(collabId)
           .then(wallet => {
             logInfo("Wallet address for user " + collabId + " is " + wallet.address)
-            professors[collabId] = { wallet_address: wallet.address, 1: 0, 2: 0, 3: 0, 4: 0 }
+
+            professors[collabId] = { "wallet_address": wallet.address, 1: 0, 2: 0, 3: 0, 4: 0, "total_payment": 0}
+
             resolve()
           })
       }))
@@ -249,4 +221,38 @@ const buildProfessorsObjects = (callback) => {
     const pro = await Promise.all(promiseArray)
     callback(professors)
   })
+}
+
+
+const calculateAccumulateForProfessors = (professors, callback) => {
+  Object.keys(professors).forEach(function(key) {
+    professors[key]['total_payment'] = professors[key]['1'] * category_one_payment_per_student +
+                                      professors[key]['2'] * category_two_payment_per_student +
+                                      professors[key]['3'] * category_three_payment_per_student +
+                                      professors[key]['4'] * category_four_payment_per_student
+    console.log(professors)
+  })
+
+  callback("OK estimating total payment for professors")
+}
+
+
+const sendPayments = async (professors, deployerWallet, callback) => {
+  var promiseArray = [];
+
+  Object.keys(professors).forEach(function(key) {
+    if (professors[key]['total_payment'] > 0) {
+      promiseArray.push(new Promise((resolve, reject) => {
+        logInfo("Sending " + professors[key]['total_payment'] + " ETH to professor " + key)
+
+        services.contractInteraction.sendMoneyToWallet(professors[key]['wallet_address'],
+                                                      professors[key]['total_payment'].toString(),
+                                                      deployerWallet)
+        .then(setTimeout(() => resolve(), 10000))
+      }))
+    }
+  })
+
+  const pro = await Promise.all(promiseArray)
+  callback("OK sending all payments to professors")
 }

@@ -1,0 +1,7 @@
+function handler() {
+  return async function (req, reply) {
+    reply.code(200).send("pong");
+  };
+}
+
+module.exports = { handler };
