@@ -69,7 +69,7 @@ function health({services, config}){
   };
 }
 
-function health({services, config}){
+function getSuscription({services, config}){
   return {
     method: "GET",
     url: "/suscriptionStatus/:userId",
@@ -77,4 +77,4 @@ function health({services, config}){
   };
 }
 
-module.exports = [getWalletDataRoute, getWalletsDataRoute, createWalletRoute, createDepositRoute, getDepositRoute, sendPaymentRoute, health];
+module.exports = [getWalletDataRoute, getWalletsDataRoute, createWalletRoute, createDepositRoute, getDepositRoute, sendPaymentRoute, health, getSuscription];
